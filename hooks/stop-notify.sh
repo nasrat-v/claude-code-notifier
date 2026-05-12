@@ -34,18 +34,30 @@ TITLE="$TITLE_PREFIX · $DIR_NAME"
 
 MSG=""
 if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
-  PROMPT=$(jq -r '
-    select(.type == "user") |
-    .message.content |
-    if type == "string" then .
-    elif type == "array" then (.[] | select(.type? == "text") | .text)
-    else empty end
-  ' "$TRANSCRIPT" 2>/dev/null \
-    | grep -v -E '^<command-name>|^<local-command-stdout>|^<command-message>|^<command-args>|^<system-reminder>' \
-    | tail -1 \
-    | tr '\n' ' ' \
-    | head -c 80)
-  MSG="$PROMPT"
+  MSG=$(perl -nle '
+    use JSON::PP;
+    BEGIN { our $last = "" }
+    our $last;
+    my $rec = eval { decode_json($_) };
+    next unless $rec && ($rec->{type} // "") eq "user";
+    my $c = $rec->{message}{content};
+    my $text;
+    if (!ref $c) { $text = $c }
+    elsif (ref $c eq "ARRAY") {
+      $text = join "\n", map { $_->{text} // "" }
+        grep { ref $_ eq "HASH" && ($_->{type} // "") eq "text" } @$c;
+    }
+    next unless defined $text && length $text;
+    $text =~ s|<system-reminder>.*?</system-reminder>||gs;
+    $text =~ s|<user-prompt-submit-hook>.*?</user-prompt-submit-hook>||gs;
+    $text =~ s|<local-command-[a-z-]+>.*?</local-command-[a-z-]+>||gs;
+    $text =~ s{<command-(name|message|args)>.*?</command-\1>}{}gs;
+    $text =~ s|\s+| |g;
+    $text =~ s|^\s+||;
+    $text =~ s|\s+$||;
+    $last = $text if length $text;
+    END { print substr($last, 0, 80) }
+  ' "$TRANSCRIPT" 2>/dev/null)
 fi
 [ -z "$MSG" ] && MSG="$DEFAULT_MSG"
 

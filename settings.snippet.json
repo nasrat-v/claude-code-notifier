@@ -7,6 +7,13 @@
         ]
       }
     ],
+    "StopFailure": [
+      {
+        "hooks": [
+          { "type": "command", "command": "STATUS=fail ~/.claude/hooks/stop-notify.sh" }
+        ]
+      }
+    ],
     "UserPromptSubmit": [
       {
         "hooks": [

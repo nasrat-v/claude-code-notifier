@@ -1,5 +1,21 @@
 #!/bin/bash
-THRESHOLD=30
+THRESHOLD="${CCN_THRESHOLD:-30}"
+ICON_PATH="${CCN_ICON_PATH:-/Applications/Claude.app/Contents/Resources/electron.icns}"
+STATUS="${STATUS:-ok}"
+ORPHAN_MIN="${CCN_ORPHAN_CLEANUP_MIN:-1440}"
+
+if [ "$STATUS" = "fail" ]; then
+  TITLE_PREFIX="❌ Claude Code"
+  SOUND="${CCN_FAIL_SOUND:-Sosumi}"
+  DEFAULT_MSG="Agent failed"
+else
+  TITLE_PREFIX="Claude Code"
+  SOUND="${CCN_SOUND:-Glass}"
+  DEFAULT_MSG="Agent has finished"
+fi
+
+find /tmp -maxdepth 1 -name 'claude-turn-start-*' -mmin "+$ORPHAN_MIN" -delete 2>/dev/null
+
 INPUT=$(cat)
 SID=$(jq -r '.session_id // empty' <<< "$INPUT")
 TRANSCRIPT=$(jq -r '.transcript_path // empty' <<< "$INPUT")
@@ -14,7 +30,7 @@ if [ -n "$SID" ] && [ -f "$START_FILE" ]; then
 fi
 
 DIR_NAME=$(basename "${CWD:-$PWD}")
-TITLE="Claude Code · $DIR_NAME"
+TITLE="$TITLE_PREFIX · $DIR_NAME"
 
 MSG=""
 if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
@@ -31,17 +47,16 @@ if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
     | head -c 80)
   MSG="$PROMPT"
 fi
-[ -z "$MSG" ] && MSG="Agent has finished"
+[ -z "$MSG" ] && MSG="$DEFAULT_MSG"
 
 CLICK_HANDLER=""
 case "$TERM_PROGRAM" in
-  iTerm.app)    CLICK_HANDLER="$HOME/.claude/hooks/focus-iterm.sh $ITERM_SESSION_ID" ;;
+  iTerm.app)      CLICK_HANDLER="$HOME/.claude/hooks/focus-iterm.sh $ITERM_SESSION_ID" ;;
   Apple_Terminal) CLICK_HANDLER="$HOME/.claude/hooks/focus-terminal.sh $TERM_SESSION_ID" ;;
 esac
 
 ICON_ARGS=()
-[ -f /Applications/Claude.app/Contents/Resources/electron.icns ] && \
-  ICON_ARGS=(-appIcon /Applications/Claude.app/Contents/Resources/electron.icns)
+[ -f "$ICON_PATH" ] && ICON_ARGS=(-appIcon "$ICON_PATH")
 
 EXEC_ARGS=()
 [ -n "$CLICK_HANDLER" ] && EXEC_ARGS=(-execute "$CLICK_HANDLER")
@@ -50,5 +65,5 @@ terminal-notifier \
   -title "$TITLE" \
   -message "Subject: \"$MSG\"" \
   "${ICON_ARGS[@]}" \
-  -sound Glass \
+  -sound "$SOUND" \
   "${EXEC_ARGS[@]}"

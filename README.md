@@ -31,18 +31,15 @@ The notification fires in any terminal. Click-to-focus needs stable AppleScript 
 
 ## Install
 
-```bash
-brew install terminal-notifier jq
+One-shot:
 
+```bash
 git clone https://github.com/nasrat-v/claude-code-notifier.git
 cd claude-code-notifier
-
-mkdir -p ~/.claude/hooks
-cp hooks/*.sh ~/.claude/hooks/
-chmod +x ~/.claude/hooks/*.sh
+./setup.sh
 ```
 
-Merge `settings.snippet.json` into `~/.claude/settings.json`. If you already have hooks, append to the existing arrays:
+`setup.sh` copies hooks, offers to install `terminal-notifier` + `jq` via brew, and optionally swaps the icon. Then merge `settings.snippet.json` into `~/.claude/settings.json`. If you already have hooks, append to the existing arrays:
 
 ```json
 {
@@ -50,11 +47,26 @@ Merge `settings.snippet.json` into `~/.claude/settings.json`. If you already hav
     "Stop": [
       { "hooks": [ { "type": "command", "command": "~/.claude/hooks/stop-notify.sh" } ] }
     ],
+    "StopFailure": [
+      { "hooks": [ { "type": "command", "command": "STATUS=fail ~/.claude/hooks/stop-notify.sh" } ] }
+    ],
     "UserPromptSubmit": [
       { "hooks": [ { "type": "command", "command": "~/.claude/hooks/turn-start.sh" } ] }
     ]
   }
 }
+```
+
+The `StopFailure` entry plays a different sound and prepends ❌ to the title when a turn errors.
+
+### Manual install
+
+```bash
+brew install terminal-notifier jq
+
+mkdir -p ~/.claude/hooks
+cp hooks/*.sh ~/.claude/hooks/
+chmod +x ~/.claude/hooks/*.sh
 ```
 
 ## Grant notification permission
@@ -91,17 +103,27 @@ Note: `brew upgrade terminal-notifier` overwrites this. Re-run after upgrade.
 
 ## Configuration
 
-Edit `~/.claude/hooks/stop-notify.sh`:
+Override defaults via env vars in your shell profile (`~/.zshrc`, `~/.bashrc`):
 
-- `THRESHOLD=30` — minimum seconds before notifying
-- `head -c 80` — prompt truncation length
+| Var | Default | Purpose |
+|-----|---------|---------|
+| `CCN_THRESHOLD` | `30` | Min seconds before notifying |
+| `CCN_SOUND` | `Glass` | Sound on success Stop |
+| `CCN_FAIL_SOUND` | `Sosumi` | Sound on StopFailure |
+| `CCN_ICON_PATH` | `/Applications/Claude.app/Contents/Resources/electron.icns` | `-appIcon` source |
+| `CCN_ORPHAN_CLEANUP_MIN` | `1440` | Purge stale `/tmp/claude-turn-start-*` older than N minutes |
+
+Available sound names live in `/System/Library/Sounds/` (Glass, Sosumi, Funk, Ping, etc.).
+
+Prompt truncation length is hard-coded at 80 chars in `stop-notify.sh` (`head -c 80`).
 
 ## Files
 
 | File | Hook event | Purpose |
 |------|------------|---------|
+| `setup.sh`                | — | One-shot installer: copies hooks, installs deps, swaps icon |
 | `hooks/turn-start.sh`     | `UserPromptSubmit` | Stamps `/tmp/claude-turn-start-<sid>` with start time |
-| `hooks/stop-notify.sh`    | `Stop` | Computes elapsed time, fires notification if ≥ threshold |
+| `hooks/stop-notify.sh`    | `Stop` / `StopFailure` | Computes elapsed time, fires notification if ≥ threshold. Different sound + title on failure (set `STATUS=fail`). Also prunes orphan `/tmp` files. |
 | `hooks/focus-iterm.sh`    | (click handler) | Activates iTerm2 window + selects session by `$ITERM_SESSION_ID` |
 | `hooks/focus-terminal.sh` | (click handler) | Same for Terminal.app via `$TERM_SESSION_ID` |
 | `settings.snippet.json`   | — | Hook config to merge into `~/.claude/settings.json` |

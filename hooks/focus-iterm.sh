@@ -10,7 +10,10 @@ tell application "iTerm2"
         if id of s is "$SID" then
           set index of w to 1
           tell t to select
-          tell s to select
+          try
+            set current session of t to s
+          end try
+          select s
           return
         end if
       end repeat

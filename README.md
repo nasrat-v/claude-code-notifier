@@ -31,7 +31,17 @@ The notification fires in any terminal. Click-to-focus needs stable AppleScript 
 
 ## Install
 
-One-shot:
+### Via Homebrew (recommended)
+
+```bash
+brew tap nasrat-v/tap
+brew install claude-code-notifier
+claude-code-notifier-setup
+```
+
+`claude-code-notifier-setup` copies hooks into `~/.claude/hooks/` and optionally swaps the icon. Snippet path is printed in caveats — merge it into `~/.claude/settings.json`.
+
+### From source
 
 ```bash
 git clone https://github.com/nasrat-v/claude-code-notifier.git

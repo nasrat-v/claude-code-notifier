@@ -1,4 +1,7 @@
 #!/bin/bash
+# Resolve this script's own directory so the click handlers are found whether
+# installed standalone (~/.claude/hooks) or as a plugin (${CLAUDE_PLUGIN_ROOT}/hooks).
+HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 THRESHOLD="${CCN_THRESHOLD:-30}"
 ICON_PATH="${CCN_ICON_PATH:-/Applications/Claude.app/Contents/Resources/electron.icns}"
 STATUS="${STATUS:-ok}"
@@ -63,8 +66,8 @@ fi
 
 CLICK_HANDLER=""
 case "$TERM_PROGRAM" in
-  iTerm.app)      CLICK_HANDLER="$HOME/.claude/hooks/focus-iterm.sh $ITERM_SESSION_ID" ;;
-  Apple_Terminal) CLICK_HANDLER="$HOME/.claude/hooks/focus-terminal.sh $TERM_SESSION_ID" ;;
+  iTerm.app)      CLICK_HANDLER="$HOOK_DIR/focus-iterm.sh $ITERM_SESSION_ID" ;;
+  Apple_Terminal) CLICK_HANDLER="$HOOK_DIR/focus-terminal.sh $TERM_SESSION_ID" ;;
 esac
 
 ICON_ARGS=()

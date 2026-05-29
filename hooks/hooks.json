@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/stop-notify.sh" }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          { "type": "command", "command": "STATUS=fail \"${CLAUDE_PLUGIN_ROOT}\"/hooks/stop-notify.sh" }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          { "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/turn-start.sh" }
+        ]
+      }
+    ]
+  }
+}

@@ -31,7 +31,27 @@ The notification fires in any terminal. Click-to-focus needs stable AppleScript 
 
 ## Install
 
-### Via Homebrew (recommended)
+### Via Claude Code plugin marketplace
+
+Inside Claude Code:
+
+```text
+/plugin marketplace add nasrat-v/claude-code-notifier
+/plugin install notifier@claude-code-notifier
+/reload-plugins
+```
+
+This wires the `Stop` / `StopFailure` / `UserPromptSubmit` hooks automatically — **no `settings.json` edit needed**. The plugin bundles the hook scripts and references them via `${CLAUDE_PLUGIN_ROOT}`, so there is no slash command; it just runs on turn boundaries.
+
+It does **not** install Homebrew packages or change system settings. One-time setup is still required:
+
+```bash
+brew install terminal-notifier jq
+```
+
+Then [grant notification permission](#grant-notification-permission) and optionally [swap the icon](#use-claudes-icon).
+
+### Via Homebrew
 
 ```bash
 brew tap nasrat-v/tap
@@ -136,7 +156,9 @@ Prompt truncation length is hard-coded at 80 chars in `stop-notify.sh` (`head -c
 | `hooks/stop-notify.sh`    | `Stop` / `StopFailure` | Computes elapsed time, fires notification if ≥ threshold. Different sound + title on failure (set `STATUS=fail`). Also prunes orphan `/tmp` files. |
 | `hooks/focus-iterm.sh`    | (click handler) | Activates iTerm2 window + selects session by `$ITERM_SESSION_ID` |
 | `hooks/focus-terminal.sh` | (click handler) | Same for Terminal.app via `$TERM_SESSION_ID` |
-| `settings.snippet.json`   | — | Hook config to merge into `~/.claude/settings.json` |
+| `settings.snippet.json`   | — | Hook config to merge into `~/.claude/settings.json` (Homebrew / source / manual installs) |
+| `hooks/hooks.json`        | — | Plugin hook config, auto-loaded on plugin install (uses `${CLAUDE_PLUGIN_ROOT}`) |
+| `.claude-plugin/`         | — | `plugin.json` + `marketplace.json` for the Claude Code plugin install path |
 
 ## Troubleshooting
 

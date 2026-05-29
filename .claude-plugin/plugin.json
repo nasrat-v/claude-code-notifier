@@ -1,0 +1,18 @@
+{
+  "name": "notifier",
+  "version": "0.1.0",
+  "description": "macOS desktop notifications when a Claude Code turn finishes (long turns only), with click-to-focus back to the terminal tab. Hooks-based, no slash command.",
+  "author": {
+    "name": "Valentin Nasraty"
+  },
+  "homepage": "https://github.com/nasrat-v/claude-code-notifier",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "plugin",
+    "hooks",
+    "notifications",
+    "macos",
+    "terminal-notifier"
+  ]
+}
